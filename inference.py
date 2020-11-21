@@ -386,7 +386,27 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        pacmanPosition = gameState.getPacmanPosition()
+        jailPosition = self.getJailPosition()
+        distribution = DiscreteDistribution()
+        # a list to save our updated beliefs
+        updatedBelief = []
+        for particle in self.particles:
+            distribution[particle] += self.getObservationProb(observation, pacmanPosition, particle, jailPosition)
+        # if total = 0, then reinitialize using initializeUniformly
+        # When all particles receive zero weight, the list of particles should be reinitialized by calling initializeUniformly.
+        #print(distribution.total())
+        if (distribution.total() == 0):
+            self.initializeUniformly(gameState)
+        # normalize and update self.particles
+        else:
+            distribution.normalize()
+            #update self.particles
+            for index in range(0, self.numParticles):
+                updatedBelief.append(distribution.sample())
+            # changed current beliefs to updatedBelief
+            self.particles = updatedBelief
+
 
     def elapseTime(self, gameState):
         """
@@ -394,7 +414,11 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        particles = []
+        for oldPos in self.particles:
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            particles.append(newPosDist.sample())
+        self.particles = particles
 
     def getBeliefDistribution(self):
         """
