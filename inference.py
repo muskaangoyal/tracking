@@ -192,7 +192,19 @@ class InferenceModule:
         Return the probability P(noisyDistance | pacmanPosition, ghostPosition).
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        # special cases
+        #  if distance sensor returns None and ghost position is in jailPosition then return 1
+        if ((noisyDistance == None) & (ghostPosition == jailPosition)):
+            return 1.0
+        # if distance sensor returns None but ghost position is not in jailPosition then return 0
+        elif ((noisyDistance == None) & (ghostPosition != jailPosition)):
+            return 0.0
+        # if the reading is not None and ghostPosition is in jailPosition with probability 0
+        elif ((noisyDistance != None) & (ghostPosition == jailPosition)):
+            return 0.0
+        else:
+            distance = manhattanDistance(pacmanPosition, ghostPosition)
+            return busters.getObservationProbability(noisyDistance, distance)
 
     def setGhostPosition(self, gameState, ghostPosition, index):
         """
@@ -300,8 +312,16 @@ class ExactInference(InferenceModule):
         position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
-
+        # find pacman position
+        pacmanPosition = gameState.getPacmanPosition()
+        #find jail position
+        jailPosition = self.getJailPosition()
+        #find all possible ghost positions
+        ghostPositions = self.allPositions
+        # for every possible ghost position, update the belief of that location based on observation probability
+        for ghostPosition in ghostPositions:
+            self.beliefs[ghostPosition]= self.beliefs[ghostPosition] * self.getObservationProb(observation, pacmanPosition, ghostPosition, jailPosition)
+        # normalize the beliefs
         self.beliefs.normalize()
 
     def elapseTime(self, gameState):
@@ -314,7 +334,14 @@ class ExactInference(InferenceModule):
         current position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        predictedBeliefs = DiscreteDistribution()
+        for oldPos in self.allPositions:
+            dist = self.getPositionDistribution(gameState, oldPos)
+            for position in self.allPositions:
+                updatedBelief = dist[position] * self.beliefs[oldPos]
+                predictedBeliefs[position] += updatedBelief
+        predictedBeliefs.normalize()
+        self.beliefs = predictedBeliefs
 
     def getBeliefDistribution(self):
         return self.beliefs

@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -140,7 +140,22 @@ class GreedyBustersAgent(BustersAgent):
         pacmanPosition = gameState.getPacmanPosition()
         legal = [a for a in gameState.getLegalPacmanActions()]
         livingGhosts = gameState.getLivingGhosts()
-        livingGhostPositionDistributions = \
-            [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
-             if livingGhosts[i+1]]
+        livingGhostPositionDistributions = [beliefs for i, beliefs in enumerate(self.ghostBeliefs) if livingGhosts[i+1]]
         "*** YOUR CODE HERE ***"
+        # ghost positions list
+        ghostPositions = []
+        for ghost in livingGhostPositionDistributions:
+            ghostPositions.append(ghost.argMax())
+        # set the best Action to None and minDistance to infinity
+        bestAction = None
+        minDist = +float("inf")
+        # for every possible legal action, find the minimum dist and update best action
+        for action in legal:
+            successorPosition = Actions.getSuccessor(pacmanPosition, action)
+            for ghostPos in ghostPositions:
+                distance = self.distancer.getDistance(successorPosition, ghostPos)
+                # update min distance and action if distance < minimum distance
+                if distance < minDist:
+                    minDist = distance
+                    bestAction = action
+        return bestAction
