@@ -507,7 +507,7 @@ class JointParticleFilter(ParticleFilter):
             currProb = reduce(lambda x, y: x * y, currProb, 1)
             distribution[particle] += currProb
             
-        if (distribution.total() == 0):
+        if distribution.total() == 0:
             self.initializeUniformly(gameState)
             return
     
@@ -524,14 +524,10 @@ class JointParticleFilter(ParticleFilter):
         newParticles = []
         for oldParticle in self.particles:
             newParticle = list(oldParticle)  # A list of ghost positions
-
-            # now loop through and update each entry in newParticle...
-            "*** YOUR CODE HERE ***"
-            raiseNotDefined()
-
-            """*** END YOUR CODE HERE ***"""
+            newParticle = [self.getPositionDistribution(gameState, newParticle, i, self.ghostAgents[i]).sample() for i in range(self.numGhosts)]
             newParticles.append(tuple(newParticle))
         self.particles = newParticles
+
 
 
 # One JointInference module is shared globally across instances of MarginalInference
