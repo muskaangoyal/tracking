@@ -16,6 +16,7 @@ import itertools
 import random
 import busters
 import game
+from functools import reduce
 
 from util import manhattanDistance, raiseNotDefined
 
@@ -259,7 +260,8 @@ class InferenceModule:
         """
         Set the belief state to a uniform prior belief over all positions.
         """
-        raise NotImplementedError
+        
+        
 
     def observeUpdate(self, observation, gameState):
         """
@@ -461,7 +463,8 @@ class JointParticleFilter(ParticleFilter):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        self.particles = list(itertools.product(self.legalPositions, self.legalPositions))
+        random.shuffle(self.particles)
 
     def addGhostAgent(self, agent):
         """
@@ -494,7 +497,24 @@ class JointParticleFilter(ParticleFilter):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        pacmanPosition = gameState.getPacmanPosition()
+        distribution = DiscreteDistribution()
+        updatedBelief = []
+
+        for particle in self.particles:
+            # Source: https://stackoverflow.com/questions/7948291/is-there-a-built-in-product-in-python
+            currProb = [self.getObservationProb(observation[i], pacmanPosition, particle[i],self.getJailPosition(i)) for i in range(self.numGhosts)]
+            currProb = reduce(lambda x, y: x * y, currProb, 1)
+            distribution[particle] += currProb
+            
+        if (distribution.total() == 0):
+            self.initializeUniformly(gameState)
+            return
+    
+        distribution.normalize()
+        for index in range(0, self.numParticles):
+            updatedBelief.append(distribution.sample())
+        self.particles = updatedBelief
 
     def elapseTime(self, gameState):
         """
